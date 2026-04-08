@@ -189,7 +189,7 @@ router.get('/reviews', async (req, res) => {
       filter.movieId = movieId;
     }
 
-    const reviews = await Review.find(filter).populate('movieId');
+    const reviews = await Review.find(filter);
     res.json(reviews);
 
   } catch (err) {
@@ -234,6 +234,50 @@ router.post('/reviews', authJwtController.isAuthenticated, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Error creating review' });
+  }
+});
+
+router.get('/reviews/:id', authJwtController.isAuthenticated, async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ message: 'Review not found' });
+    }
+
+    const result = await Review.deleteOne({ _id: req.params.id });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: 'Review not found' });
+    }
+
+    res.json({ message: 'Review deleted' });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error deleting review' });
+  }
+});
+
+router.delete('/reviews/:id', authJwtController.isAuthenticated, async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ message: 'Review not found' });
+    }
+
+    const result = await Review.deleteOne({ _id: req.params.id });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: 'Review not found' });
+    }
+
+    res.json({ message: 'Review deleted' });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error deleting review' });
   }
 });
 
