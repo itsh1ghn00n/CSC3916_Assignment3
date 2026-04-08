@@ -200,7 +200,8 @@ router.get('/reviews', async (req, res) => {
 
 router.post('/reviews', authJwtController.isAuthenticated, async (req, res) => {
   try {
-    const { movieId, username, review, rating } = req.body;
+    const { movieId, review, rating } = req.body;
+    const username = req.user.username;
 
     if (!movieId || !review || rating === undefined) {
       return res.status(400).json({ message: 'Missing fields' });
