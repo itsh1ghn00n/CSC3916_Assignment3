@@ -19,6 +19,32 @@ app.use(passport.initialize());
 
 const router = express.Router();
 
+const crypto = require("crypto");
+const rp = require('request-promise');
+
+const GA_TRACKING_ID = process.env.GA_KEY;
+
+function trackDimension(category, action, label, value, dimension, metric) {
+    var options = {
+        method: 'GET',
+        url: 'https://www.google-analytics.com/collect',
+        qs: {
+            v: '1',
+            tid: GA_TRACKING_ID,
+            cid: crypto.randomBytes(16).toString("hex"),
+            t: 'event',
+            ec: category,
+            ea: action,
+            el: label,
+            ev: value,
+            cd1: dimension,
+            cm1: metric
+        }
+    };
+
+    return rp(options);
+}
+
 // Removed getJSONObjectForMovieRequirement as it's not used
 
 router.post('/signup', async (req, res) => { // Use async/await
@@ -154,8 +180,22 @@ router.put('/movies/:title', authJwtController.isAuthenticated, async (req, res)
 });
 
 router.get('/reviews', async (req, res) => {
-  const reviews = await Review.find();
-  res.json(reviews);
+  try {
+    const { movieId } = req.query;
+
+    let filter = {};
+
+    if (movieId) {
+      filter.movieId = movieId;
+    }
+
+    const reviews = await Review.find(filter).populate('movieId');
+    res.json(reviews);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error retrieving reviews' });
+  }
 });
 
 router.post('/reviews', authJwtController.isAuthenticated, async (req, res) => {
@@ -166,6 +206,12 @@ router.post('/reviews', authJwtController.isAuthenticated, async (req, res) => {
       return res.status(400).json({ message: 'Missing fields' });
     }
 
+    const mongoose = require('mongoose');
+
+    if (!mongoose.Types.ObjectId.isValid(movieId)) {
+      return res.status(404).json({ message: 'Movie not found' });
+    }
+
     const movie = await Movie.findById(movieId);
     if (!movie) {
       return res.status(404).json({ message: 'Movie not found' });
@@ -173,6 +219,15 @@ router.post('/reviews', authJwtController.isAuthenticated, async (req, res) => {
 
     const newReview = new Review({ movieId, username, review, rating });
     await newReview.save();
+
+    trackDimension(
+      movie.genre,              // category
+      'POST /reviews',          // action
+      'API Request for Movie Review', // label
+      1,                        // value
+      movie.title,              // dimension (movie name)
+      1                         // metric
+    ).catch(err => console.error("GA error:", err));
 
     res.json({ message: 'Review created!' });
 
