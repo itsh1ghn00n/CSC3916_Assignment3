@@ -84,6 +84,11 @@ router.route('/movies')
           if (!req.body.title || !req.body.actors) {
               return res.status(400).json({ success: false, message: 'Missing required fields' });
           }
+          const existingMovie = await Movie.findOne({ title: req.body.title });
+
+          if (existingMovie) {
+            return res.status(409).json({ success: false, message: 'Movie already exists' });
+          }
 
           const movie = new Movie(req.body);
           await movie.save();
