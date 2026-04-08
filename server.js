@@ -97,9 +97,15 @@ router.route('/movies')
 
 router.delete('/movies/:title', authJwtController.isAuthenticated, async (req, res) => {
   try {
-    await Movie.deleteOne({ title: req.params.title });
+    const result = await Movie.deleteOne({ title: req.params.title });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ success: false, message: 'Movie not found' });
+    }
+
     res.json({ success: true, message: 'Movie deleted' });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ success: false });
   }
 });
