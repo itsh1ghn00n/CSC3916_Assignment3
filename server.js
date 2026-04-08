@@ -127,27 +127,70 @@ router.route('/movies')
       }
     });
 
-router.get('/movies/:title', authJwtController.isAuthenticated, async (req, res) => {
+router.get('/movies', authJwtController.isAuthenticated, async (req, res) => {
   try {
-    const movie = await Movie.findOne({ title: req.params.title });
+    const aggregate = [
+      {
+        $lookup: {
+          from: 'reviews',
+          localField: '_id',
+          foreignField: 'movieId',
+          as: 'movieReviews'
+        }
+      },
+      {
+        $addFields: {
+          avgRating: { $avg: '$movieReviews.rating' }
+        }
+      },
+      {
+        $sort: { avgRating: -1 }
+      }
+    ];
 
-    if (!movie) {
-      return res.status(404).json({ message: 'Movie not found' });
-    }
-    if (req.query.reviews === 'true') {
-      const reviews = await Review.find({ movieId: movie._id });
-
-      return res.json({
-        movie,
-        reviews
-      });
-    }
-
-    res.json(movie);
+    const movies = await Movie.aggregate(aggregate);
+    res.json(movies);
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Error retrieving movie' });
+    res.status(500).json({ message: 'Error retrieving movies' });
+  }
+});
+
+router.get('/movies/:id/details', authJwtController.isAuthenticated, async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+
+    const aggregate = [
+      {
+        $match: { _id: new mongoose.Types.ObjectId(req.params.id) }
+      },
+      {
+        $lookup: {
+          from: 'reviews',
+          localField: '_id',
+          foreignField: 'movieId',
+          as: 'reviews'
+        }
+      },
+      {
+        $addFields: {
+          avgRating: { $avg: '$reviews.rating' }
+        }
+      }
+    ];
+
+    const result = await Movie.aggregate(aggregate);
+
+    if (!result.length) {
+      return res.status(404).json({ message: 'Movie not found' });
+    }
+
+    res.json(result[0]);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error retrieving movie details' });
   }
 });
 
