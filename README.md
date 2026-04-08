@@ -10,7 +10,7 @@ This Postman collection includes:
 ### Postman Collection
 [Download / View Collection](https://github.com/itsh1ghn00n/CSC3916_Assignment3/blob/main/postman_collection.json)
 
-### Postman Web View (may require login)
+### Postman Web View
 https://itsh1ghn00n-2653726.postman.co/workspace/Nico_C_CSCI3916~bfc22366-62b0-43f1-b51d-db6bdb7b407d/collection/51837659-3f977d44-76b2-4e57-b1ea-d0c040ff49eb?action=share&creator=51837659&active-environment=51837659-18ad8c38-f62a-462b-86b6-56a08ebb71de
 
 

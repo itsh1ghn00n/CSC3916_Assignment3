@@ -164,6 +164,9 @@
             "exec": [
               "pm.test(\"Movie created\", function () {\r",
               "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Duplicate movie rejected\", function () {\r",
+              "    pm.response.to.have.status(409);\r",
               "});"
             ],
             "type": "text/javascript",
@@ -183,7 +186,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n  \"title\": \"Rango\",\r\n  \"releaseDate\": 2011,\r\n  \"genre\": \"Western\",\r\n  \"actors\": [\r\n    { \"actorName\": \"Johnny Depp\", \"characterName\": \"Rango\" },\r\n    { \"actorName\": \"Abigail Breslin\", \"characterName\": \"Priscilla\" }\r\n  ]\r\n}",
+          "raw": "{\r\n  \"title\": \"Rango\",\r\n  \"releaseDate\": 2011,\r\n  \"genre\": \"Western\",\r\n  \"actors\": [\r\n    { \"actorName\": \"Johnny Depp\", \"characterName\": \"Rango\" },\r\n    { \"actorName\": \"Abigail Breslin\", \"characterName\": \"Priscilla\" },\r\n    { \"actorName\": \"Alfred Molina\", \"characterName\": \"Roadkill\" },\r\n    { \"actorName\": \"Bill Nighy\", \"characterName\": \"Rattlesnake Jake\" }\r\n  ]\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -274,7 +277,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n  \"genre\": \"Comedy\"\r\n}",
+          "raw": "{\r\n  \"title\": \"Inception\",\r\n  \"releaseDate\": 2010,\r\n  \"genre\": \"Science Fiction\",\r\n  \"actors\": [\r\n    { \"actorName\": \"Leonardo DiCaprio\", \"characterName\": \"Cobb\" },\r\n    { \"actorName\": \"Joseph Gordon-Levitt\", \"characterName\": \"Arthur\" },\r\n    { \"actorName\": \"Elliot Page\", \"characterName\": \"Ariadne\" },\r\n    { \"actorName\": \"Tom Hardy\", \"characterName\": \"Eames\" }\r\n  ]\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -296,7 +299,7 @@
           "variable": [
             {
               "key": "title",
-              "value": "Spirited Away"
+              "value": "Rango"
             }
           ]
         }
@@ -391,7 +394,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n  \"title\": \"Bad Movie\"\r\n}",
+          "raw": "{\r\n  \"title\": \"The Silence of the Lambs\",\r\n  \"releaseDate\": 1991,\r\n  \"genre\": \"Horror\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
