@@ -126,71 +126,28 @@ router.route('/movies')
           res.status(500).json({ success: false, message: 'Error saving movie' });
       }
     });
-
-router.get('/movies', authJwtController.isAuthenticated, async (req, res) => {
+    
+router.get('/movies/:title', authJwtController.isAuthenticated, async (req, res) => {
   try {
-    const aggregate = [
-      {
-        $lookup: {
-          from: 'reviews',
-          localField: '_id',
-          foreignField: 'movieId',
-          as: 'movieReviews'
-        }
-      },
-      {
-        $addFields: {
-          avgRating: { $avg: '$movieReviews.rating' }
-        }
-      },
-      {
-        $sort: { avgRating: -1 }
-      }
-    ];
+    const movie = await Movie.findOne({ title: req.params.title });
 
-    const movies = await Movie.aggregate(aggregate);
-    res.json(movies);
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Error retrieving movies' });
-  }
-});
-
-router.get('/movies/:id/details', authJwtController.isAuthenticated, async (req, res) => {
-  try {
-    const mongoose = require('mongoose');
-
-    const aggregate = [
-      {
-        $match: { _id: new mongoose.Types.ObjectId(req.params.id) }
-      },
-      {
-        $lookup: {
-          from: 'reviews',
-          localField: '_id',
-          foreignField: 'movieId',
-          as: 'reviews'
-        }
-      },
-      {
-        $addFields: {
-          avgRating: { $avg: '$reviews.rating' }
-        }
-      }
-    ];
-
-    const result = await Movie.aggregate(aggregate);
-
-    if (!result.length) {
+    if (!movie) {
       return res.status(404).json({ message: 'Movie not found' });
     }
+    if (req.query.reviews === 'true') {
+      const reviews = await Review.find({ movieId: movie._id });
 
-    res.json(result[0]);
+      return res.json({
+        movie,
+        reviews
+      });
+    }
+
+    res.json(movie);
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Error retrieving movie details' });
+    res.status(500).json({ message: 'Error retrieving movie' });
   }
 });
 
@@ -223,37 +180,16 @@ router.put('/movies/:title', authJwtController.isAuthenticated, async (req, res)
 });
 
 router.get('/reviews', async (req, res) => {
-  try {
-    const { movieId } = req.query;
-
-    let filter = {};
-
-    if (movieId) {
-      filter.movieId = movieId;
-    }
-
-    const reviews = await Review.find(filter);
-    res.json(reviews);
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Error retrieving reviews' });
-  }
+  const reviews = await Review.find();
+  res.json(reviews);
 });
 
 router.post('/reviews', authJwtController.isAuthenticated, async (req, res) => {
   try {
-    const { movieId, review, rating } = req.body;
-    const username = req.user.username;
+    const { movieId, username, review, rating } = req.body;
 
     if (!movieId || !review || rating === undefined) {
       return res.status(400).json({ message: 'Missing fields' });
-    }
-
-    const mongoose = require('mongoose');
-
-    if (!mongoose.Types.ObjectId.isValid(movieId)) {
-      return res.status(404).json({ message: 'Movie not found' });
     }
 
     const movie = await Movie.findById(movieId);
@@ -264,64 +200,11 @@ router.post('/reviews', authJwtController.isAuthenticated, async (req, res) => {
     const newReview = new Review({ movieId, username, review, rating });
     await newReview.save();
 
-    trackDimension(
-      movie.genre,              // category
-      'POST /reviews',          // action
-      'API Request for Movie Review', // label
-      1,                        // value
-      movie.title,              // dimension (movie name)
-      1                         // metric
-    ).catch(err => console.error("GA error:", err));
-
     res.json({ message: 'Review created!' });
 
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Error creating review' });
-  }
-});
-
-router.get('/reviews/:id', authJwtController.isAuthenticated, async (req, res) => {
-  try {
-    const mongoose = require('mongoose');
-
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(404).json({ message: 'Review not found' });
-    }
-
-    const result = await Review.deleteOne({ _id: req.params.id });
-
-    if (result.deletedCount === 0) {
-      return res.status(404).json({ message: 'Review not found' });
-    }
-
-    res.json({ message: 'Review deleted' });
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Error deleting review' });
-  }
-});
-
-router.delete('/reviews/:id', authJwtController.isAuthenticated, async (req, res) => {
-  try {
-    const mongoose = require('mongoose');
-
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(404).json({ message: 'Review not found' });
-    }
-
-    const result = await Review.deleteOne({ _id: req.params.id });
-
-    if (result.deletedCount === 0) {
-      return res.status(404).json({ message: 'Review not found' });
-    }
-
-    res.json({ message: 'Review deleted' });
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Error deleting review' });
   }
 });
 
